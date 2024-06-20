@@ -1,0 +1,5 @@
+variables:
+  serviceConnectionName: 'NON PROD DEVOPS DEPLOYMENT'
+  integrationRgName: 'rg-integration-core-dev-ase-001'
+  targetSubscriptionId: 'xxxxx'
+  environment: dev

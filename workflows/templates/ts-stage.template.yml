@@ -1,0 +1,41 @@
+parameters:
+  - name: environmentName
+    default: ''
+  - name: serviceConnectionName
+    default: ''
+  - name: targetSubscriptionId
+    default: ''
+  - name: deploymentJobName
+    default: 'DeployJob'
+  - name: deploymentName
+    default: '$(Build.BuildNumber)'
+  - name: apiFriendlyName
+    default: ''
+  - name: resourceGroupName
+    default: ''
+  - name: location
+    default: ''
+  - name: versionPrefix
+    default: ''
+
+  
+jobs:
+  - deployment: ${{ parameters.deploymentJobName }}
+    displayName: 'Deploy ${{ parameters.apiFriendlyName }} to ${{ parameters.environmentName }}'
+    environment: "${{ parameters.environmentName }}"
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - checkout: self
+
+            # perform the ts deployment
+            - task: AzureCLI@2
+              displayName: Deploy Bicep to Tenant
+              inputs:
+                azureSubscription: ${{ parameters.serviceConnectionName }}
+                workingDirectory: '$(Build.SourcesDirectory)'
+                scriptType: pscore
+                scriptLocation: inlineScript
+                inlineScript: |
+                  az ts create --resource-group ${{ parameters.resourceGroupName }} --location ${{ parameters.location }} --name aps.bicep.module.apim.api --version '${{ parameters.versionPrefix }}1.0' --template-file '$(Build.SourcesDirectory)/src/api-publish/main.bicep'

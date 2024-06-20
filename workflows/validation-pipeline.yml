@@ -1,0 +1,24 @@
+trigger: none
+
+pool:
+  vmImage: 'windows-latest'
+
+jobs: 
+- job: ValidateIaC
+  displayName: Validate IaC
+  steps:
+
+    # Ensure the bicep code in the projects all pass the linter
+    - pwsh: |
+        Get-ChildItem -Path src -Filter main.json | Remove-Item -Force
+      displayName: Clean up Linter files
+    
+    # Run security checks tailored for an IaC solution
+    - task: MicrosoftSecurityDevOps@1
+      displayName: Run Security Checks
+      inputs:
+        #tools: 'templateanalyzer,credscan,antimalware'
+        tools: 'credscan,antimalware'  # remove due to unable to exclude rules currently (00036)
+        break: true
+
+

@@ -1,0 +1,53 @@
+parameters:
+  - name: environmentName
+    default: ''
+  - name: serviceConnectionName
+    default: ''
+  - name: targetSubscriptionId
+    default: ''
+  - name: deploymentJobName
+    default: 'DeployJob'
+  - name: deploymentName
+    default: '$(Build.BuildNumber)'
+  - name: apiFriendlyName
+    default: ''
+  - name: resourceGroupName
+    default: ''
+  - name: location
+    default: ''
+  - name: templateFileName
+    default: ''
+  - name: parameterFileName
+    default: ''
+
+  
+jobs:
+  - deployment: ${{ parameters.deploymentJobName }}
+    displayName: 'Deploy ${{ parameters.apiFriendlyName }} to ${{ parameters.environmentName }}'
+    environment: "${{ parameters.environmentName }}"
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - checkout: self
+            # what-if           
+            - task: AzureCLI@2
+              displayName: Display Bicep Changes
+              inputs:
+                azureSubscription: ${{ parameters.serviceConnectionName }}
+                workingDirectory: '$(Build.SourcesDirectory)'
+                scriptType: pscore
+                scriptLocation: inlineScript
+                inlineScript: |
+                  az deployment group create --name ${{ parameters.deploymentName }} --mode Incremental --resource-group ${{ parameters.resourceGroupName }} --template-file ${{ parameters.templateFileName }} --parameters ${{ parameters.parameterFileName }} --what-if
+
+            # perform the bicep deployment
+            - task: AzureCLI@2
+              displayName: Deploy Bicep to Tenant
+              inputs:
+                azureSubscription: ${{ parameters.serviceConnectionName }}
+                workingDirectory: '$(Build.SourcesDirectory)'
+                scriptType: pscore
+                scriptLocation: inlineScript
+                inlineScript: |
+                  az deployment group create  --name ${{ parameters.deploymentName }} --mode Incremental --resource-group ${{ parameters.resourceGroupName }} --template-file ${{ parameters.templateFileName }} --parameters ${{ parameters.parameterFileName }}

@@ -1,0 +1,50 @@
+trigger: none 
+
+variables:
+  - template: './variables/common.yml'
+
+parameters:
+
+  - name: deploydev
+    type: boolean
+    displayName: 'Deploy to DEV'
+    default: true
+
+  - name: deploysit
+    type: boolean
+    displayName: 'Deploy to SIT'
+    default: false
+
+  - name: deployuat
+    type: boolean
+    displayName: 'Deploy to UAT'
+    default: false
+
+  - name: deployprd
+    type: boolean
+    displayName: 'Deploy to Prod'
+    default: false
+
+
+name: $(version.MajorMinor).$(version.Patch)
+
+stages:
+  # Deploy the Bicep to the dev environment 
+  - stage: devDeploy
+    condition: ${{ parameters.deployDev }}
+    displayName: 'Deploy to Dev'
+    variables:
+      - template: './variables/base/dev-base.variables.yml'
+    jobs:
+      - template: './templates/deploy-stage.template.yml'
+        parameters:
+          environmentName: dev
+          serviceConnectionName: ${{ variables.serviceConnectionName }}
+          targetSubscriptionId: ${{ variables.targetSubscriptionId }}
+          deploymentJobName: 'deploy_dev'
+          deploymentName: ${{ variables.deploymentName }}
+          apiFriendlyName: 'Deploy APIM API'
+          resourceGroupName: ${{ variables.integrationRgName }}
+          location: ${{ variables.location }}
+          templateFileName: './src/consumer-data-standards/main.bicep'
+          parameterFileName: './src/consumer-data-standards/env/main.dev.bicepparam'
